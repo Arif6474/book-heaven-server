@@ -26,14 +26,14 @@ async function run() {
     await client.connect();
 
     const db = client.db("book-heaven");
-    const bookCollection = db.collection("book");
+    const bookCollection = db.collection("books");
     console.log("DB connect successfully! ");
 
     // API
     app.get("/books", async (req, res) => {
       const cursor = bookCollection.find({});
       const books = await cursor.toArray();
-      res.send({ data: books });
+      res.send(books);
     });
 
     // single book api
@@ -41,12 +41,61 @@ async function run() {
     app.get("/book/:id", async (req, res) => {
       const id = req.params.id;
       const result = await bookCollection.findOne({ _id: new ObjectId(id) });
-      console.log(result);
       res.send(result);
     });
+   
+    // app.get('/books',async (req, res) => {
+    //   const { search } = req.query;
+    //   console.log("🚀 ~ file: index.js:49 ~ app.get ~ search:", req.query)
+    
+    //   if (!search) {
+    //     return res.status(400).json({ error: 'Please provide a search query' });
+    //   }
+      
+    //   // Perform search based on the provided query
+    //   // const cursor = bookCollection.find({ genre: { $regex: new RegExp(search, 'i') } });
+    //   const cursor = bookCollection.find({ genre: 'Business' });
+    //   const searchResults = await cursor.toArray();
+    //   console.log("🚀 ~ file: index.js:58 ~ app.get ~ searchResults:", searchResults)
+    
+    //   res.json(searchResults);
+    // });
+    
+    app.post('/review/:id', async (req, res) => {
+      const bookId = req.params.id;
+      const review = req.body.review;
+
+      const result = await bookCollection.updateOne(
+        { _id: new ObjectId(bookId) },
+        { $push: { reviews: review } }
+      );
+
+      // console.log(result);
+
+      if (result.modifiedCount !== 1) {
+        res.json({ error: 'Book not found or review not added' });
+        return;
+      }
+
+      res.json({ message: 'review added successfully' });
+    });
+
+    app.get('/review/:id', async (req, res) => {
+      const bookId = req.params.id;
+
+      const result = await bookCollection.findOne(
+        { _id: new ObjectId(bookId) },
+        { projection: { _id: 0, reviews: 1 } }
+      );
+
+      if (result) {
+        res.json(result);
+      } else {
+        res.status(404).json({ error: 'Book not found' });
+      }
+    });
   } finally {
-    // Ensures that the client will close when you finish/error
-    //   await client.close();
+
   }
 }
 run().catch(console.dir);
