@@ -35,7 +35,12 @@ async function run() {
       const books = await cursor.toArray();
       res.send(books);
     });
-
+    
+    app.post("/book", async (req, res) => {
+      const book = req.body;
+      const result = await bookCollection.insertOne(book);
+      res.send(result);
+    });
     // single book api
  
     app.get("/book/:id", async (req, res) => {
