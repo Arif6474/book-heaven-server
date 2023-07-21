@@ -35,45 +35,66 @@ async function run() {
       const books = await cursor.toArray();
       res.send(books);
     });
-    
+
     app.post("/book", async (req, res) => {
       const book = req.body;
       const result = await bookCollection.insertOne(book);
       res.send(result);
     });
     // single book api
- 
+
     app.get("/book/:id", async (req, res) => {
       const id = req.params.id;
       const result = await bookCollection.findOne({ _id: new ObjectId(id) });
       res.send(result);
     });
-    
-       // delete book
-      app.delete("/book/:id", async(req, res) =>{
-        const id = req.params.id;
-        const query = {_id: new ObjectId(id)};
-        const result = await bookCollection.deleteOne(query);
-        res.send(result);
+    //update book
+
+    app.patch("/book/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedData = req.body; // Data to update the book
+
+      try {
+        const result = await bookCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: updatedData }
+        );
+
+        if (result.modifiedCount === 1) {
+          res.status(200).json({ message: "Book updated successfully" });
+        } else {
+          res.status(404).json({ error: "Book not found" });
+        }
+      } catch (error) {
+        res.status(500).json({ error: "Failed to update book" });
+      }
+    });
+
+    // delete book
+    app.delete("/book/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bookCollection.deleteOne(query);
+      res.send(result);
     });
     // app.get('/books',async (req, res) => {
     //   const { search } = req.query;
     //   console.log("🚀 ~ file: index.js:49 ~ app.get ~ search:", req.query)
-    
+
     //   if (!search) {
     //     return res.status(400).json({ error: 'Please provide a search query' });
     //   }
-      
+
     //   // Perform search based on the provided query
     //   // const cursor = bookCollection.find({ genre: { $regex: new RegExp(search, 'i') } });
     //   const cursor = bookCollection.find({ genre: 'Business' });
     //   const searchResults = await cursor.toArray();
     //   console.log("🚀 ~ file: index.js:58 ~ app.get ~ searchResults:", searchResults)
-    
+
     //   res.json(searchResults);
     // });
-    
-    app.post('/review/:id', async (req, res) => {
+
+    app.post("/review/:id", async (req, res) => {
       const bookId = req.params.id;
       const review = req.body.review;
 
@@ -85,14 +106,14 @@ async function run() {
       // console.log(result);
 
       if (result.modifiedCount !== 1) {
-        res.json({ error: 'Book not found or review not added' });
+        res.json({ error: "Book not found or review not added" });
         return;
       }
 
-      res.json({ message: 'review added successfully' });
+      res.json({ message: "review added successfully" });
     });
 
-    app.get('/review/:id', async (req, res) => {
+    app.get("/review/:id", async (req, res) => {
       const bookId = req.params.id;
 
       const result = await bookCollection.findOne(
@@ -103,11 +124,10 @@ async function run() {
       if (result) {
         res.json(result);
       } else {
-        res.status(404).json({ error: 'Book not found' });
+        res.status(404).json({ error: "Book not found" });
       }
     });
   } finally {
-
   }
 }
 run().catch(console.dir);
