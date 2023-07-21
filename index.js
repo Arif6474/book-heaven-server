@@ -48,7 +48,14 @@ async function run() {
       const result = await bookCollection.findOne({ _id: new ObjectId(id) });
       res.send(result);
     });
-   
+    
+       // delete book
+      app.delete("/book/:id", async(req, res) =>{
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const result = await bookCollection.deleteOne(query);
+        res.send(result);
+    });
     // app.get('/books',async (req, res) => {
     //   const { search } = req.query;
     //   console.log("🚀 ~ file: index.js:49 ~ app.get ~ search:", req.query)
